@@ -28,9 +28,7 @@ jobs:
       - run:
           name: Build and push docker images
           command: |
-            MAINT=opsforge
-            IMAGE=shipyard
-            TAG=latest
-            docker build -t $MAINT/$IMAGE:$TAG -f Dockerfile.build
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push $MAINT/$IMAGE:$TAG
+            make clean
+            make media
+            make image
+            make release
