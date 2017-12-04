@@ -2,6 +2,8 @@ CGO_ENABLED=0
 GOOS=linux
 GOARCH=amd64
 TAG?=latest
+MAINT?=opsforge
+IMAGE?=shipyard
 COMMIT=`git rev-parse --short HEAD`
 
 all: build media
@@ -22,10 +24,11 @@ media:
 
 image: media build
 	@echo Building Shipyard image $(TAG)
-	@cd controller && docker build -t opsforgeio/shipyard:$(TAG) .
+	@cd controller && docker build -t $(MAINT)/$(IMAGE):$(TAG) .
 
 release: build image
-	@docker push opsforgeio/shipyard:$(TAG)
+	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+	@docker push $(MAINT)/$(IMAGE):$(TAG)
 
 test: clean
 	@godep go test -v ./...
