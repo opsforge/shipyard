@@ -34,7 +34,7 @@ jobs:
             go get github.com/tools/godep
             wget -P /tmp https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
             gunzip /tmp/docker-17.09.0-ce.tgz
-            tar -xvf /tmp/docker-17.09.0-ce.tar
+            tar -xvf /tmp/docker-17.09.0-ce.tar -C /tmp
             cp /tmp/docker/docker /usr/local/bin/docker
             chmod +x /usr/local/bin/docker
             rm -rf /tmp/docker*
