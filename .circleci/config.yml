@@ -18,16 +18,27 @@ jobs:
             bash test.sh
 
   build:
-    <<: *defaults
+    working_directory: /go/src/github.com/opsforgeio/shipyard
+    docker:
+      - image: golang:1.8.5-jessie
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Build controller binary
           command: |
+            curl -sL https://deb.nodesource.com/setup | bash -
+            apt-get update
+            apt-get install -y nodejs wget curl gunzip
+            apt-get clean
+            npm install -g bower
+            go get github.com/tools/godep
+            wget -P /tmp https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
+            gunzip /tmp/docker-17.09.0-ce.tgz
+            tar -xvf /tmp/docker-17.09.0-ce.tar
+            cp /tmp/docker/docker /usr/local/bin/docker
+            chmod +x /usr/local/bin/docker
+            rm -rf /tmp/docker*
             make build
-            cp controller/controller /tmp
       - persist_to_workspace:
           root: /tmp/build
           paths:
