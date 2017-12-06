@@ -22,7 +22,7 @@ remote-build:
 media:
 	@cd controller/static && bower -s install --allow-root -p | xargs echo > /dev/null
 
-image: media build
+image:
 	@echo Building Shipyard image $(TAG)
 	@cd controller && docker build -t $(MAINT)/$(IMAGE):$(TAG) .
 
