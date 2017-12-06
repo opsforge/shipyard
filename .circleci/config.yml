@@ -26,9 +26,9 @@ jobs:
       - run:
           name: Build controller binary
           command: |
-            curl -sL https://deb.nodesource.com/setup | bash -
+            curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
             apt-get update
-            apt-get install -y nodejs wget curl gunzip
+            apt-get install -y nodejs wget curl gzip build-essential
             apt-get clean
             npm install -g bower
             go get github.com/tools/godep
