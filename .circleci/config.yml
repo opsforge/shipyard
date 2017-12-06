@@ -1,12 +1,12 @@
 defaults: &defaults
   working_directory: /go/src/github.com/opsforgeio/shipyard
-  docker:
-    - image: circleci/golang:1.8
 
 version: 2
 jobs:
   test:
     <<: *defaults
+    docker:
+      - image: circleci/golang:1.8
     steps:
       - checkout
       - run:
@@ -22,6 +22,7 @@ jobs:
     docker:
       - image: golang:1.8.5-jessie
     steps:
+      - checkout
       - run:
           name: Set up build environment
           command: |
@@ -51,6 +52,7 @@ jobs:
   deploy:
     <<: *defaults
     steps:
+      - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - attach_workspace:
@@ -64,7 +66,7 @@ jobs:
 
 workflows:
   version: 2
-  cicd:
+  shipyard-pipeline:
     jobs:
       - test
       - build:
