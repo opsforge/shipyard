@@ -1,12 +1,12 @@
 defaults: &defaults
   working_directory: /go/src/github.com/opsforgeio/shipyard
+  docker:
+    - image: circleci/golang:1.8
 
 version: 2
 jobs:
   test:
     <<: *defaults
-    docker:
-      - image: circleci/golang:1.8
     steps:
       - checkout
       - run:
