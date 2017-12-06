@@ -1,12 +1,20 @@
-FROM golang:1.5
+FROM golang:1.8.5-jessie
 
 RUN curl -sL https://deb.nodesource.com/setup | bash -
-RUN apt-get update && apt-get install -y nodejs
+RUN apt-get update && \
+    apt-get install -y nodejs wget curl gunzip && \
+    apt-get clean
 RUN npm install -g bower
 RUN go get github.com/tools/godep
 
-ADD https://get.docker.com/builds/Linux/x86_64/docker-1.7.0 /usr/local/bin/docker
-RUN chmod +x /usr/local/bin/docker
+RUN cd /tmp && \
+    wget https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz && \
+    gunzip docker-17.09.0-ce.tgz && \
+    tar -xvf docker-17.09.0-ce.tar && \
+    cp docker/docker /usr/local/bin/docker && \
+    chmod +x /usr/local/bin/docker && \
+    rm -rf /tmp/docker*
+
 ENV TAG latest
 ENV PATH $PATH:/go/bin:/usr/local/go/bin
 

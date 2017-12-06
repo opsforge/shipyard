@@ -2,6 +2,8 @@ CGO_ENABLED=0
 GOOS=linux
 GOARCH=amd64
 TAG?=latest
+MAINT?=opsforge
+IMAGE?=shipyard
 COMMIT=`git rev-parse --short HEAD`
 
 all: build media
@@ -20,12 +22,13 @@ remote-build:
 media:
 	@cd controller/static && bower -s install --allow-root -p | xargs echo > /dev/null
 
-image: media build
+image:
 	@echo Building Shipyard image $(TAG)
-	@cd controller && docker build -t opsforgeio/shipyard:$(TAG) .
+	@cd controller && docker build -t $(MAINT)/$(IMAGE):$(TAG) .
 
-release: build image
-	@docker push opsforgeio/shipyard:$(TAG)
+release:
+	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
+	@docker push $(MAINT)/$(IMAGE):$(TAG)
 
 test: clean
 	@godep go test -v ./...

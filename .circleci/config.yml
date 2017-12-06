@@ -1,13 +1,82 @@
-# Golang CircleCI 2.0 configuration file
+defaults: &defaults
+  working_directory: /go/src/github.com/opsforgeio/shipyard
+  docker:
+    - image: circleci/golang:1.8
+
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/golang:1.8
-    working_directory: /go/src/github.com/opsforgeio/shipyard
+  test:
+    <<: *defaults
     steps:
       - checkout
-      - run: go get -v -t -d ./...
-      - run: go get -d github.com/stretchr/testify/assert
-      - run: go get github.com/tools/godep
-      - run: bash test.sh
+      - run:
+          name: Run GO test suite
+          command: |
+            go get -v -t -d ./...
+            go get -d github.com/stretchr/testify/assert
+            go get github.com/tools/godep
+            bash test.sh
+
+  build:
+    working_directory: /go/src/github.com/opsforgeio/shipyard
+    docker:
+      - image: golang:1.8.5-jessie
+    steps:
+      - checkout
+      - run:
+          name: Set up build environment
+          command: |
+            curl -sL https://deb.nodesource.com/setup_9.x | bash -
+            apt-get update
+            apt-get install -y nodejs wget curl gzip build-essential
+            apt-get clean
+            npm install -g bower
+            go get github.com/tools/godep
+            wget -P /tmp https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
+            gunzip /tmp/docker-17.09.0-ce.tgz
+            tar -xvf /tmp/docker-17.09.0-ce.tar -C /tmp
+            cp /tmp/docker/docker /usr/local/bin/docker
+            chmod +x /usr/local/bin/docker
+            rm -rf /tmp/docker*
+            go get -v -d ./...
+            go get github.com/tools/godep
+      - run:
+          name: Build controller library
+          command: |
+            make build
+            make media
+      - persist_to_workspace:
+          root: controller
+          paths:
+            - controller
+            - static
+
+  deploy:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: controller
+      - run:
+          name: Build and push docker images
+          command: |
+            make image
+            make release
+
+workflows:
+  version: 2
+  shipyard-pipeline:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+      - deploy:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - build
