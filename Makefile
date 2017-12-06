@@ -26,7 +26,7 @@ image:
 	@echo Building Shipyard image $(TAG)
 	@cd controller && docker build -t $(MAINT)/$(IMAGE):$(TAG) .
 
-release: build image
+release:
 	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
 	@docker push $(MAINT)/$(IMAGE):$(TAG)
 
