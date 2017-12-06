@@ -38,6 +38,8 @@ jobs:
             cp /tmp/docker/docker /usr/local/bin/docker
             chmod +x /usr/local/bin/docker
             rm -rf /tmp/docker*
+            go get -v -d ./...
+            go get github.com/tools/godep
             make build
       - persist_to_workspace:
           root: /tmp/build
