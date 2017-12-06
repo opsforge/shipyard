@@ -1,10 +1,12 @@
-# Golang CircleCI 2.0 configuration file
+defaults: &defaults
+  working_directory: /go/src/github.com/opsforgeio/shipyard
+  docker:
+    - image: circleci/golang:1.8
+
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/golang:1.8
-    working_directory: /go/src/github.com/opsforgeio/shipyard
+  test:
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -14,20 +16,48 @@ jobs:
             go get -d github.com/stretchr/testify/assert
             go get github.com/tools/godep
             bash test.sh
+
+  build:
+    <<: *defaults
+    steps:
+      - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      # - run:
-      #     name: Install docker client
-      #     command: |
-      #       set -x
-      #       VER="17.09.0-ce"
-      #       curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-      #       tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-      #       mv -f /tmp/docker/* /usr/bin
-      # build and push Docker image
+      - run:
+          name: Build controller binary
+          command: |
+            make build
+            cp controller/controller /tmp
+      - persist_to_workspace:
+          root: /tmp/build
+          paths:
+            - controller
+
+  deploy:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/build
       - run:
           name: Build and push docker images
           command: |
+            cp /tmp/build/controller ./controller/
+            chmod +x ./controller/controller
             make clean
             make image
             make release
+
+workflows:
+  version: 2
+  cicd:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+      - deploy:
+          requires:
+            - build
