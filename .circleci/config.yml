@@ -22,9 +22,8 @@ jobs:
     docker:
       - image: golang:1.8.5-jessie
     steps:
-      - checkout
       - run:
-          name: Build controller binary
+          name: Set up build environment
           command: |
             curl -sL https://deb.nodesource.com/setup_9.x | bash -
             apt-get update
@@ -40,25 +39,25 @@ jobs:
             rm -rf /tmp/docker*
             go get -v -d ./...
             go get github.com/tools/godep
+      - run:
+          name: Build controller library
+          command: |
             make build
       - persist_to_workspace:
-          root: /tmp/build
+          root: controller
           paths:
             - controller
 
   deploy:
     <<: *defaults
     steps:
-      - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - attach_workspace:
-          at: /tmp/build
+          at: controller/controller
       - run:
           name: Build and push docker images
           command: |
-            cp /tmp/build/controller ./controller/
-            chmod +x ./controller/controller
             make clean
             make image
             make release
