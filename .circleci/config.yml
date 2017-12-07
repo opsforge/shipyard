@@ -5,7 +5,7 @@ defaults: &defaults
 
 version: 2
 jobs:
-  test:
+  go-test:
     <<: *defaults
     steps:
       - checkout
@@ -51,6 +51,19 @@ jobs:
             - controller
             - static
 
+  dryrun:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: controller
+      - run:
+          name: Build docker images
+          command: |
+            make image
+
   deploy:
     <<: *defaults
     steps:
@@ -65,18 +78,48 @@ jobs:
             make image
             make release
 
+  smoketest:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Deploying shipyard using wrapper script
+          command: |
+            bash deploy/setup.sh
+      - run:
+          name: Using curl to verify shipyard accessibility on 8080
+          command: |
+            sleep 10
+            curl -vILks http://localhost:8080 &>/dev/null
+      - run:
+          name: Using curl to verify shipyard content on 8080
+          command: |
+            curl -vLks http://localhost:8080 | grep -i 'username' &>/dev/null
+
 workflows:
   version: 2
   shipyard-pipeline:
     jobs:
-      - test
+      - go-test
       - build:
           requires:
-            - test
+            - go-test
+      - dryrun:
+          requires:
+            - build
       - deploy:
           filters:
             branches:
               only:
                 - master
           requires:
-            - build
+            - dryrun
+      - smoketest:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - deploy
