@@ -4,7 +4,7 @@ Composable Docker Management
 # Disclaimer
 This project was resurrected because I personally love it. I wanted to upgrade subcomponents to current versions and wrap this into an up-to-date CI/CD pipeline. Hopefully contributors can / will move this along as my knowledge with Go is limited. I will keep this up to date as far as I can when it comes to version upgrades and such, but I will not be adding new features of my own for now.
 
-[![CircleCI](https://circleci.com/gh/opsforgeio/shipyard.svg?style=svg)](https://circleci.com/gh/opsforgeio/shipyard)
+[![CircleCI](https://circleci.com/gh/opsforgeio/shipyard/tree/master.svg?style=svg)](https://circleci.com/gh/opsforgeio/shipyard/tree/master)
 
 Shipyard enables multi-host, Docker cluster management.  It uses [Docker Swarm](https://docs.docker.com/swarm) for cluster resourcing and scheduling.
 
