@@ -91,12 +91,13 @@ jobs:
       - run:
           name: Using curl to verify shipyard accessibility on 8080
           command: |
-            sleep 10
-            curl -vILks http://localhost:8080 &>/dev/null
+            cd .circleci
+            docker build -t curl .
+            docker run -ti --link shipyard-controller curl -vILks http://shipyard-controller:8080 &>/dev/null
       - run:
           name: Using curl to verify shipyard content on 8080
           command: |
-            curl -vLks http://localhost:8080 | grep -i 'username' &>/dev/null
+            docker run -ti --link shipyard-controller curl -Lks http://shipyard-controller:8080 | grep -i 'ui-view' &>/dev/null
 
 workflows:
   version: 2
