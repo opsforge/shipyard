@@ -1,0 +1,73 @@
+version: '3'
+services:
+
+  rethinkdb:
+    hostname: rethinkdb
+    image: rethinkdb
+    networks:
+      - shipyard
+
+  discovery:
+    depends_on:
+      - rethinkdb
+    hostname: shipyard-discovery
+    image: microbox/etcd
+    command:  -name discovery
+    expose:
+      - "4001"
+      - "7001"
+    networks:
+      - shipyard
+
+  proxy:
+    depends_on:
+      - discovery
+    hostname: proxy
+    image: shipyard/docker-proxy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 2375:2375
+    environment:
+      - PORT=2375
+    networks:
+      - shipyard
+
+  swarm-manager:
+    depends_on:
+      - proxy
+    expose:
+      - "3375"
+    image: swarm:latest
+    command: manage --host tcp://0.0.0.0:3375 etcd://discovery:4001
+    networks:
+      shipyard:
+        aliases:
+          - swarm
+          - swarm-manager
+
+  swarm-agent:
+    depends_on:
+      - swarm-manager
+    image: swarm:latest
+    command: join --addr proxy:2375 etcd://discovery:4001
+    networks:
+      shipyard:
+        aliases:
+          - swarm-agent
+
+  controller:
+    depends_on:
+      - swarm-agent
+    hostname: shipyard-controller
+    image: opsforge/shipyard:latest
+    command: |
+      server
+      -d tcp://swarm:3375
+    ports:
+      - 8080:8080
+    networks:
+      - shipyard
+
+networks:
+  shipyard:

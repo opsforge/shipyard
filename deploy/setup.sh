@@ -169,7 +169,7 @@ start_proxy() {
         -v /var/run/docker.sock:/var/run/docker.sock \
         -e PORT=$PROXY_PORT \
         --volumes-from=$PREFIX-certs $TLS_OPTS\
-        ehazlett/docker-proxy:latest)
+        shipyard/docker-proxy:latest)
 }
 
 remove_proxy() {

@@ -78,7 +78,7 @@ jobs:
             make image
             make release
 
-  smoketest:
+  smoketest-convscript:
     <<: *defaults
     steps:
       - checkout
@@ -99,6 +99,27 @@ jobs:
           command: |
             docker run -ti --link shipyard-controller curl -Lks http://shipyard-controller:8080 | grep -i 'ui-view' &>/dev/null
 
+  smoketest-compose3:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Deploying shipyard using Docker Compose v3
+          command: |
+            bash deploy/launch.sh
+      - run:
+          name: Using curl to verify shipyard accessibility on 8080
+          command: |
+            cd .circleci
+            docker build -t curl .
+            docker run -ti --link shipyard_controller_1 curl -vILks http://shipyard-controller:8080 &>/dev/null
+      - run:
+          name: Using curl to verify shipyard content on 8080
+          command: |
+            docker run -ti --link shipyard_controller_1 curl -Lks http://shipyard-controller:8080 | grep -i 'ui-view' &>/dev/null
+
 workflows:
   version: 2
   shipyard-pipeline:
@@ -117,7 +138,51 @@ workflows:
                 - master
           requires:
             - dryrun
-      - smoketest:
+      - smoketest-convscript:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - deploy
+      - smoketest-compose3:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - deploy
+  shipyard-pipeline-nightly:
+    triggers:
+      - schedule:
+          cron: "6 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - go-test
+      - build:
+          requires:
+            - go-test
+      - dryrun:
+          requires:
+            - build
+      - deploy:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - dryrun
+      - smoketest-convscript:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - deploy
+      - smoketest-compose3:
           filters:
             branches:
               only:
