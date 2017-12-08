@@ -108,11 +108,12 @@ jobs:
       - run:
           name: Deploying shipyard using Docker Compose v3
           command: |
-            bash deploy/launch.sh
+            cd deploy
+            bash launch.sh
       - run:
           name: Using curl to verify shipyard accessibility on 8080
           command: |
-            cd .circleci
+            cd ../.circleci
             docker build -t curl .
             docker run -ti --link shipyard_controller_1 curl -vILks http://shipyard-controller:8080 &>/dev/null
       - run:
