@@ -21,6 +21,8 @@ build-static:
 
 image:
 	@docker build -t $(REPO):$(TAG) .
+testimage:
+	@docker build -t $(REPO):test .
 
 clean:
 	@rm docker-proxy
