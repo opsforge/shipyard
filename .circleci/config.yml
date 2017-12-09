@@ -40,7 +40,7 @@ jobs:
             rm -rf /tmp/docker*
             go get -v -d ./...
       - run:
-          name: Build controller library
+          name: Build controller binary
           command: |
             make build
             make media
@@ -64,7 +64,7 @@ jobs:
             apt-get clean
             go get github.com/tools/godep
       - run:
-          name: Build controller library
+          name: Build proxy binary
           command: |
             cd docker-proxy
             go get -v -d ./...

@@ -23,7 +23,7 @@ services:
     depends_on:
       - discovery
     hostname: proxy
-    image: opsforge/docker-proxy:latest
+    image: shipyard/docker-proxy:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
