@@ -28,7 +28,7 @@ jobs:
           command: |
             curl -sL https://deb.nodesource.com/setup_9.x | bash -
             apt-get update
-            apt-get install -y nodejs wget curl gzip build-essential
+            apt-get install -y --allow-unauthenticated nodejs wget curl gzip build-essential
             apt-get clean
             npm install -g bower
             go get github.com/tools/godep
@@ -60,7 +60,7 @@ jobs:
           name: Set up build environment
           command: |
             apt-get update
-            apt-get install -y wget curl gzip build-essential
+            apt-get install -y --allow-unauthenticated wget curl gzip build-essential
             apt-get clean
             go get github.com/tools/godep
       - run:
