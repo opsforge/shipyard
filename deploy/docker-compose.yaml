@@ -4,6 +4,9 @@ services:
   rethinkdb:
     hostname: rethinkdb
     image: rethinkdb
+    # The volume section is optional and can be commented out if persisting the shipyard configuration is not a concern (the path is also optional)
+    volumes:
+      - ~/shipyard_db:/data
     networks:
       - shipyard
 

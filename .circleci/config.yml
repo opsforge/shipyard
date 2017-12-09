@@ -225,13 +225,22 @@ workflows:
       - dryrun-proxy:
           requires:
             - build-proxy
+      # ---- MASTER BRANCH ONLY ----
+      # QC IMAGES FOR SMOKETESTS
       - qc-controller:
+          filters:
+            branches:
+              only:
+                - master
           requires:
             - dryrun-controller
       - qc-proxy:
+          filters:
+            branches:
+              only:
+                - master
           requires:
             - dryrun-proxy
-      # ---- MASTER BRANCH ONLY ----
       # SMOKE TESTING OF AUTOMATED DEPLOYMENTS
       - smoketest-convscript:
           filters:
