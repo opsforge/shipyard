@@ -30,6 +30,10 @@ release:
 	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
 	@docker push $(MAINT)/$(IMAGE):$(TAG)
 
+testrelease:
+	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
+	@docker push $(MAINT)/$(IMAGE):test
+
 test: clean
 	@godep go test -v ./...
 

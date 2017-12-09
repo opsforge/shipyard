@@ -23,7 +23,7 @@ services:
     depends_on:
       - discovery
     hostname: proxy
-    image: opsforge/docker-proxy:latest
+    image: opsforge/docker-proxy:test
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - swarm-agent
     hostname: shipyard-controller
-    image: opsforge/shipyard:latest
+    image: opsforge/shipyard:test
     command: |
       server
       -d tcp://swarm:3375
