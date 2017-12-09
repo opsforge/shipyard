@@ -20,7 +20,7 @@ jobs:
   build-controller:
     working_directory: /go/src/github.com/opsforgeio/shipyard
     docker:
-      - image: golang:1.8.5-jessie
+      - image: golang:1.8-stretch
     steps:
       - checkout
       - run:
@@ -53,7 +53,7 @@ jobs:
   build-proxy:
     working_directory: /go/src/github.com/opsforgeio/shipyard
     docker:
-      - image: golang:1.8.5-jessie
+      - image: golang:1.8-stretch
     steps:
       - checkout
       - run:
