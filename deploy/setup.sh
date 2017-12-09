@@ -20,8 +20,13 @@ if [ -z "`which docker`" ]; then
     exit 1
 fi
 
+if echo $1 | grep -i qc &>/dev/null ; then
+    IMAGE=${IMAGE:-opsforge/shipyard:test}
+else
+    IMAGE=${IMAGE:-opsforge/shipyard:latest}
+fi
+
 ACTION=${ACTION:-deploy}
-IMAGE=${IMAGE:-opsforge/shipyard:latest}
 PREFIX=${PREFIX:-shipyard}
 SHIPYARD_ARGS=${SHIPYARD_ARGS:-""}
 TLS_CERT_PATH=${TLS_CERT_PATH:-}

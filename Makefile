@@ -25,10 +25,17 @@ media:
 image:
 	@echo Building Shipyard image $(TAG)
 	@cd controller && docker build -t $(MAINT)/$(IMAGE):$(TAG) .
+testimage:
+	@echo Building Shipyard image test
+	@cd controller && docker build -t $(MAINT)/$(IMAGE):test .
 
 release:
 	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
 	@docker push $(MAINT)/$(IMAGE):$(TAG)
+
+testrelease:
+	@echo $(DOCKER_PASS) | docker login -u $(DOCKER_USER) --password-stdin
+	@docker push $(MAINT)/$(IMAGE):test
 
 test: clean
 	@godep go test -v ./...

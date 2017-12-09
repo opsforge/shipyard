@@ -5,7 +5,7 @@ defaults: &defaults
 
 version: 2
 jobs:
-  go-test:
+  go-test-controller:
     <<: *defaults
     steps:
       - checkout
@@ -17,10 +17,10 @@ jobs:
             go get github.com/tools/godep
             bash test.sh
 
-  build:
+  build-controller:
     working_directory: /go/src/github.com/opsforgeio/shipyard
     docker:
-      - image: golang:1.8.5-jessie
+      - image: golang:1.8-stretch
     steps:
       - checkout
       - run:
@@ -28,7 +28,7 @@ jobs:
           command: |
             curl -sL https://deb.nodesource.com/setup_9.x | bash -
             apt-get update
-            apt-get install -y nodejs wget curl gzip build-essential
+            apt-get install -y --allow-unauthenticated nodejs wget curl gzip build-essential
             apt-get clean
             npm install -g bower
             go get github.com/tools/godep
@@ -39,7 +39,6 @@ jobs:
             chmod +x /usr/local/bin/docker
             rm -rf /tmp/docker*
             go get -v -d ./...
-            go get github.com/tools/godep
       - run:
           name: Build controller library
           command: |
@@ -51,7 +50,31 @@ jobs:
             - controller
             - static
 
-  dryrun:
+  build-proxy:
+    working_directory: /go/src/github.com/opsforgeio/shipyard
+    docker:
+      - image: golang:1.8-stretch
+    steps:
+      - checkout
+      - run:
+          name: Set up build environment
+          command: |
+            apt-get update
+            apt-get install -y --allow-unauthenticated wget curl gzip build-essential
+            apt-get clean
+            go get github.com/tools/godep
+      - run:
+          name: Build controller library
+          command: |
+            cd docker-proxy
+            go get -v -d ./...
+            make build
+      - persist_to_workspace:
+          root: docker-proxy
+          paths:
+            - docker-proxy
+
+  dryrun-controller:
     <<: *defaults
     steps:
       - checkout
@@ -63,8 +86,24 @@ jobs:
           name: Build docker images
           command: |
             make image
+            make testimage
 
-  deploy:
+  dryrun-proxy:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: docker-proxy
+      - run:
+          name: Build docker images
+          command: |
+            cd docker-proxy
+            make image
+            make testimage
+
+  qc-controller:
     <<: *defaults
     steps:
       - checkout
@@ -73,10 +112,25 @@ jobs:
       - attach_workspace:
           at: controller
       - run:
-          name: Build and push docker images
+          name: Build and push docker image for controller
           command: |
-            make image
-            make release
+            make testimage
+            make testrelease
+
+  qc-proxy:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: docker-proxy
+      - run:
+          name: Build and push docker image for docker-proxy
+          command: |
+            cd docker-proxy
+            make testimage
+            make testrelease
 
   smoketest-convscript:
     <<: *defaults
@@ -87,7 +141,7 @@ jobs:
       - run:
           name: Deploying shipyard using wrapper script
           command: |
-            bash deploy/setup.sh
+            bash deploy/setup.sh qc
       - run:
           name: Using curl to verify shipyard accessibility on 8080
           command: |
@@ -109,7 +163,7 @@ jobs:
           name: Deploying shipyard using Docker Compose v3
           command: |
             cd deploy
-            bash launch.sh
+            bash launch.sh qc
       - run:
           name: Using curl to verify shipyard accessibility on 8080
           command: |
@@ -121,72 +175,94 @@ jobs:
           command: |
             docker run -ti --network=shipyard_shipyard curl -Lks http://shipyard_controller_1:8080 | grep -i 'ui-view' &>/dev/null
 
+  deploy-controller:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: controller
+      - run:
+          name: Build and push docker image for controller
+          command: |
+            make image
+            make release
+
+  deploy-proxy:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: docker-proxy
+      - run:
+          name: Build and push docker image for docker-proxy
+          command: |
+            cd docker-proxy
+            make image
+            make release
+
+
+
+
 workflows:
   version: 2
   shipyard-pipeline:
     jobs:
-      - go-test
-      - build:
+      # CODE TESTING STEPS
+      - go-test-controller
+      # BUILDING STEPS
+      - build-controller:
           requires:
-            - go-test
-      - dryrun:
+            - go-test-controller
+      - build-proxy
+      # INTEGRATION TESTING STEPS
+      - dryrun-controller:
           requires:
-            - build
-      - deploy:
-          filters:
-            branches:
-              only:
-                - master
+            - build-controller
+      - dryrun-proxy:
           requires:
-            - dryrun
+            - build-proxy
+      - qc-controller:
+          requires:
+            - dryrun-controller
+      - qc-proxy:
+          requires:
+            - dryrun-proxy
+      # ---- MASTER BRANCH ONLY ----
+      # SMOKE TESTING OF AUTOMATED DEPLOYMENTS
       - smoketest-convscript:
           filters:
             branches:
               only:
                 - master
           requires:
-            - deploy
+            - qc-controller
+            - qc-proxy
       - smoketest-compose3:
           filters:
             branches:
               only:
                 - master
           requires:
-            - deploy
-  shipyard-pipeline-nightly:
-    triggers:
-      - schedule:
-          cron: "6 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - go-test
-      - build:
-          requires:
-            - go-test
-      - dryrun:
-          requires:
-            - build
-      - deploy:
+            - qc-controller
+            - qc-proxy
+      # DEPLOYING NEW BASE IMAGES TO DOCKERHUB
+      - deploy-controller:
           filters:
             branches:
               only:
                 - master
           requires:
-            - dryrun
-      - smoketest-convscript:
+            - smoketest-convscript
+            - smoketest-compose3
+      - deploy-proxy:
           filters:
             branches:
               only:
                 - master
           requires:
-            - deploy
-      - smoketest-compose3:
-          filters:
-            branches:
-              only:
-                - master
-          requires:
-            - deploy
+            - smoketest-convscript
+            - smoketest-compose3
