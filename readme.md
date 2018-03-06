@@ -7,7 +7,7 @@ Shipyard enables multi-host, Docker cluster management.  It uses [Docker Swarm](
 
 | Service | State | Comment |
 | ------- | ----- | ------- |
-| CircleCI 2.0  | [![CircleCI](https://circleci.com/gh/opsforgeio/shipyard/tree/master.svg?style=svg)](https://circleci.com/gh/opsforgeio/shipyard/tree/master) | CICD for `master` |
+| CircleCI 2.0  | [![CircleCI](https://circleci.com/gh/opsforge/shipyard/tree/master.svg?style=svg)](https://circleci.com/gh/opsforge/shipyard/tree/master) | CICD for `master` |
 | DockerHub | `opsforge/shipyard` [![](https://images.microbadger.com/badges/image/opsforge/shipyard.svg)](https://microbadger.com/images/opsforge/shipyard "Get your own image badge on microbadger.com") | `latest` |
 | DockerHub | `opsforge/docker-proxy` [![](https://images.microbadger.com/badges/image/opsforge/docker-proxy.svg)](https://microbadger.com/images/opsforge/docker-proxy "Get your own image badge on microbadger.com") | `latest` |
 
